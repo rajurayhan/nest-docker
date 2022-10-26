@@ -1,0 +1,72 @@
+networks:
+  nest-network:
+    driver: bridge
+    name: nest-network
+services:
+  nest-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nest-api
+    command: npm run start
+    depends_on:
+      - nest-db
+    deploy:
+      resources:
+        limits:
+          cpus: '0.8'
+          memory: 600M
+    environment:
+      OPCACHE_VALIDATE_TIMESTAMPS: 1
+    image: raju/nest-api
+    networks:
+      - nest-network
+    ports:
+      - 3000:3000
+      - 9229:9229 
+    restart: unless-stopped
+    volumes:
+      - .:/app
+      - /app/node_modules
+  nest-db:
+    command: --default-authentication-plugin=mysql_native_password
+    container_name: nest-db
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 300M
+    environment:
+      MYSQL_DATABASE: nest-db
+      MYSQL_ROOT_PASSWORD: 12345678
+    image: mysql:5.7
+    networks:
+      - nest-network
+    restart: unless-stopped
+    volumes:
+      - nest-db:/var/lib/mysql
+  nest-pma:
+    container_name: nest-pma
+    depends_on:
+      - nest-db
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 100M
+    environment:
+      PMA_HOST: nest-db
+      PMA_PASSWORD: 12345678
+      PMA_USER: root
+      UPLOAD_LIMIT: 200M
+    image: phpmyadmin/phpmyadmin:5.2.0
+    networks:
+      - nest-network
+    ports:
+      - 8003:80
+    restart: unless-stopped
+version: '3.7'
+volumes:
+  nest-db:
+    driver: local
+    name: nest-db
