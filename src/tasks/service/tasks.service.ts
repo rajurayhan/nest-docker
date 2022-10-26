@@ -13,10 +13,11 @@ export class TasksService {
   }
 
   createTask(dto: CreateTaskDto): Task {
+    const { title, description } = dto;
     const task: Task = {
       id: uuid(),
-      title: dto.title,
-      description: dto.description,
+      title,
+      description,
       status: Status.OPEN,
     };
     this.tasks.push(task);
@@ -24,7 +25,7 @@ export class TasksService {
     return task;
   }
 
-  getTaskById(id: number) {
-    return id;
+  getTaskById(id: string): Task {
+    return this.tasks.find((task) => task.id === id);
   }
 }
